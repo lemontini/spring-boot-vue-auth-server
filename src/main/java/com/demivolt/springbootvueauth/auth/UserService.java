@@ -1,10 +1,14 @@
 package com.demivolt.springbootvueauth.auth;
 
+import com.demivolt.springbootvueauth.entity.AuthenticationError;
 import com.demivolt.springbootvueauth.entity.Response;
 import com.demivolt.springbootvueauth.entity.User;
 import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NonUniqueResultException;
 import java.util.Optional;
 
 @Service
@@ -15,6 +19,11 @@ public class UserService {
     private final ConfirmationTokenRepository confirmationTokenRepository;
 
     public Response createUser(User user) {
+
+        if(userRepository.findByEmail(user.getEmail()).isPresent() || userRepository.findByUsername(user.getUsername()).isPresent()) {
+            throw new NonUniqueResultException("credentials are already used");
+            // return new AuthenticationError(401, "Given username or email is already in use");
+        }
 
         User savedUser = userRepository.save(user);
         ConfirmationToken confirmationToken = new ConfirmationToken(savedUser);

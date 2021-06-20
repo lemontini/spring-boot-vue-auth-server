@@ -22,7 +22,7 @@ public class UserController {
 
     @CrossOrigin(origins = "http://localhost:8080")
     @PostMapping(value = "/auth/register", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity newUser(@RequestBody User user) {
+    public ResponseEntity<Response> newUser(@RequestBody User user) {
 
         Response savedUser = userService.createUser(user);
         if (savedUser != null) return new ResponseEntity(savedUser, HttpStatus.OK);
