@@ -27,5 +27,4 @@ Database resource can be accessed at http://localhost:8000/h2-console with crede
 * accessing main endpoint ("/"): by making a GET request with additional parameter of token, received form the login step - http://localhost:8000/?token=<TOKEN_RECEIVED_AT_LOGIN>
 
 ### Known bugs:
-* Registers duplicate users
-* No API error handling
+* none at this time
