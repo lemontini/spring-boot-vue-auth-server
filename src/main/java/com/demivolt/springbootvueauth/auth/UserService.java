@@ -1,14 +1,14 @@
 package com.demivolt.springbootvueauth.auth;
 
-import com.demivolt.springbootvueauth.entity.AuthenticationError;
 import com.demivolt.springbootvueauth.entity.Response;
 import com.demivolt.springbootvueauth.entity.User;
+import com.demivolt.springbootvueauth.exception.DuplicateUserException;
+import com.demivolt.springbootvueauth.exception.NoAccessException;
+import com.demivolt.springbootvueauth.exception.UserNotFoundException;
 import lombok.AllArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.NonUniqueResultException;
+import java.nio.file.AccessDeniedException;
 import java.util.Optional;
 
 @Service
@@ -18,11 +18,10 @@ public class UserService {
     private final UserRepository userRepository;
     private final ConfirmationTokenRepository confirmationTokenRepository;
 
-    public Response createUser(User user) {
+    public Response createUser(User user) throws DuplicateUserException {
 
         if(userRepository.findByEmail(user.getEmail()).isPresent() || userRepository.findByUsername(user.getUsername()).isPresent()) {
-            throw new NonUniqueResultException("credentials are already used");
-            // return new AuthenticationError(401, "Given username or email is already in use");
+            throw DuplicateUserException.createFrom(user);
         }
 
         User savedUser = userRepository.save(user);
@@ -34,7 +33,7 @@ public class UserService {
 
     }
 
-    public Response authenticateUser(User user) {
+    public Response authenticateUser(User user) throws UserNotFoundException {
         Optional<User> queryUser = userRepository.findByEmailAndPassword(user.getEmail(), user.getPassword());
         if (queryUser.isPresent()) {
             Optional<ConfirmationToken> optionalConfirmationToken = confirmationTokenRepository.findConfirmationTokenByUserId(queryUser.get().getId());
@@ -45,10 +44,17 @@ public class UserService {
                 return response;
             }
         }
-        return null;
+        throw new UserNotFoundException();
     }
 
-    public void accessResource() {
+    public Object accessResource(String token) throws NoAccessException {
         System.out.println("Protected resource accessed.");
+
+        Optional<ConfirmationToken> optionalConfirmationToken = confirmationTokenRepository.findConfirmationTokenByConfirmationToken(token);
+        if (optionalConfirmationToken.isPresent()) {
+            return "Access granted";
+        }
+
+        throw new NoAccessException();
     }
 }
